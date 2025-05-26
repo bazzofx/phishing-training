@@ -55,23 +55,26 @@ export default function QuickfirePhase({ onComplete }: QuickfirePhaseProps) {
     setIsCorrect(isAnswerCorrect)
     setShowFeedback(true)
 
-    if (isAnswerCorrect) {
-      addPoints(10)
-      setCorrectAnswers((prev) => prev + 1)
+    // Defer state updates to avoid updating during render
+    setTimeout(() => {
+      if (isAnswerCorrect) {
+        addPoints(10)
+        setCorrectAnswers((prev) => prev + 1)
 
-      // Set particle position to center of card
-      if (cardRef.current) {
-        const rect = cardRef.current.getBoundingClientRect()
-        setParticlePosition({
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2,
-        })
-        setShowParticles(true)
+        // Set particle position to center of card
+        if (cardRef.current) {
+          const rect = cardRef.current.getBoundingClientRect()
+          setParticlePosition({
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          })
+          setShowParticles(true)
+        }
+      } else if (currentEmail.redFlags) {
+        // Add missed flags if the answer was wrong
+        currentEmail.redFlags.forEach((flag) => addMissedFlag(flag))
       }
-    } else if (currentEmail.redFlags) {
-      // Add missed flags if the answer was wrong
-      currentEmail.redFlags.forEach((flag) => addMissedFlag(flag))
-    }
+    }, 0)
   }
 
   const nextEmail = () => {

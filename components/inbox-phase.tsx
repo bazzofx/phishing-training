@@ -65,29 +65,32 @@ export default function InboxPhase({ onComplete }: InboxPhaseProps) {
     setIsCorrect(isActionCorrect)
     setShowFeedback(true)
 
-    if (isActionCorrect) {
-      addPoints(action === "report" && email.isPhishing ? 15 : 10)
-      setCorrectAnswers((prev) => prev + 1)
+    // Defer state updates to avoid updating during render
+    setTimeout(() => {
+      if (isActionCorrect) {
+        addPoints(action === "report" && email.isPhishing ? 15 : 10)
+        setCorrectAnswers((prev) => prev + 1)
 
-      // Set particle position to center of card
-      if (cardRef.current) {
-        const rect = cardRef.current.getBoundingClientRect()
-        setParticlePosition({
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2,
-        })
-        setShowParticles(true)
+        // Set particle position to center of card
+        if (cardRef.current) {
+          const rect = cardRef.current.getBoundingClientRect()
+          setParticlePosition({
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          })
+          setShowParticles(true)
+        }
+      } else if (email.redFlags) {
+        // Add missed flags if the answer was wrong
+        email.redFlags.forEach((flag) => addMissedFlag(flag))
       }
-    } else if (email.redFlags) {
-      // Add missed flags if the answer was wrong
-      email.redFlags.forEach((flag) => addMissedFlag(flag))
-    }
 
-    // Mark email as processed
-    setProcessedEmails((prev) => ({
-      ...prev,
-      [email.id]: action,
-    }))
+      // Mark email as processed
+      setProcessedEmails((prev) => ({
+        ...prev,
+        [email.id]: action,
+      }))
+    }, 0)
   }
 
   const handleBackToInbox = () => {
@@ -292,53 +295,53 @@ export default function InboxPhase({ onComplete }: InboxPhaseProps) {
                       </div>
                     )}
                   </div>
-                    {/* Email Headers */}
-                    {currentEmail?.headers && (
-                      <EmailHeaders
-                        headers={currentEmail.headers}
-                        senderEmail={currentEmail.senderEmail}
-                        isPhishing={currentEmail.isPhishing}
-                      />
-                    )}
-                    {/* Feedback section */}
-                    {showFeedback && (
-                      <div
-                        className={`mt-4 p-3 rounded-md ${
-                          isCorrect ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-                        }`}
-                      >
-                        <div className="flex items-center mb-2">
-                          {isCorrect ? <CheckCircle className="w-5 h-5 mr-2" /> : <XCircle className="w-5 h-5 mr-2" />}
-                          <span className="font-medium">{isCorrect ? "Good decision!" : "Not the best choice!"}</span>
-                        </div>
-                        <p className="text-sm">{currentEmail?.explanation}</p>
-
-                        {currentEmail?.isPhishing && currentEmail.redFlags && (
-                          <div className="mt-3">
-                            <div className="flex items-center mb-1">
-                              <AlertTriangle className="w-4 h-4 mr-1" />
-                              <span className="font-medium">Red Flags:</span>
-                            </div>
-                            <ul className="list-disc pl-5 text-sm space-y-1">
-                              {currentEmail.redFlags.map((flag, index) => (
-                                <li key={index}>{flag}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        <div className="mt-3 flex justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className={isCorrect ? "text-green-700" : "text-red-700"}
-                            onClick={handleBackToInbox}
-                          >
-                            Back to Inbox
-                          </Button>
-                        </div>
+                  {/* Email Headers */}
+                  {currentEmail?.headers && (
+                    <EmailHeaders
+                      headers={currentEmail.headers}
+                      senderEmail={currentEmail.senderEmail}
+                      isPhishing={currentEmail.isPhishing}
+                    />
+                  )}
+                  {/* Feedback section */}
+                  {showFeedback && (
+                    <div
+                      className={`mt-4 p-3 rounded-md ${
+                        isCorrect ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      <div className="flex items-center mb-2">
+                        {isCorrect ? <CheckCircle className="w-5 h-5 mr-2" /> : <XCircle className="w-5 h-5 mr-2" />}
+                        <span className="font-medium">{isCorrect ? "Good decision!" : "Not the best choice!"}</span>
                       </div>
-                    )}
+                      <p className="text-sm">{currentEmail?.explanation}</p>
+
+                      {currentEmail?.isPhishing && currentEmail.redFlags && (
+                        <div className="mt-3">
+                          <div className="flex items-center mb-1">
+                            <AlertTriangle className="w-4 h-4 mr-1" />
+                            <span className="font-medium">Red Flags:</span>
+                          </div>
+                          <ul className="list-disc pl-5 text-sm space-y-1">
+                            {currentEmail.redFlags.map((flag, index) => (
+                              <li key={index}>{flag}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={isCorrect ? "text-green-700" : "text-red-700"}
+                          onClick={handleBackToInbox}
+                        >
+                          Back to Inbox
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                   <div className="p-4 overflow-y-auto flex-grow">
                     <div className="mb-4">
                       <div className="flex justify-between items-center">

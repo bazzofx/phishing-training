@@ -39,22 +39,25 @@ export default function SecurityLab({ onComplete }: { onComplete: (score: number
     setIsCorrect(correct)
     setShowFeedback(true)
 
-    if (correct) {
-      addPoints(15)
+    // Defer state updates to avoid updating during render
+    setTimeout(() => {
+      if (correct) {
+        addPoints(15)
 
-      // Set particle position to center of card
-      if (cardRef.current) {
-        const rect = cardRef.current.getBoundingClientRect()
-        setParticlePosition({
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2,
-        })
-        setShowParticles(true)
+        // Set particle position to center of card
+        if (cardRef.current) {
+          const rect = cardRef.current.getBoundingClientRect()
+          setParticlePosition({
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2,
+          })
+          setShowParticles(true)
+        }
+      } else {
+        // Add missed flag for incorrect answers
+        addMissedFlag(currentChallenge.skill)
       }
-    } else {
-      // Add missed flag for incorrect answers
-      addMissedFlag(currentChallenge.skill)
-    }
+    }, 0)
   }
 
   const handleNextChallenge = () => {
